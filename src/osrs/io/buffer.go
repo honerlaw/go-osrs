@@ -1,10 +1,9 @@
-package main
+package io
 
 import (
 	"encoding/binary"
 	"errors"
 	"io"
-	"log"
 )
 
 type Buffer struct {
@@ -16,7 +15,7 @@ type Buffer struct {
 
 func NewBuffer(size int) *Buffer {
 	return &Buffer{
-		internal:    make([]byte, size+1),
+		internal:    make([]byte, size),
 		length:      0,
 		index:       0,
 		isCompacted: false,
@@ -51,6 +50,7 @@ func (b *Buffer) Read(reader io.Reader) (error) {
 		// we want to read into the buffer from where it last was,
 		var slice = b.internal[b.index:]
 		var length, err = reader.Read(slice)
+		b.index = 0        // start the index over, so reading starts from beginning again
 		b.length += length // increment the number of bytes read
 		return err
 	}
@@ -62,12 +62,12 @@ func (b *Buffer) Read(reader io.Reader) (error) {
 
 func (b *Buffer) ReadByte() (value byte) {
 	value = b.internal[b.index]
-	b.index++
+	b.index += 1
 	return
 }
 
 func (b *Buffer) ReadShort() (value uint16) {
-	value = binary.LittleEndian.Uint16(b.internal[b.index : b.index+2])
+	value = binary.BigEndian.Uint16(b.internal[b.index : b.index+2])
 	b.index += 2
 	return
 }
@@ -84,6 +84,17 @@ func (b *Buffer) ReadLong() (value uint64) {
 	return
 }
 
+func (b *Buffer) WriteByte(value byte) {
+	b.internal[b.index] = value
+	b.index += 1
+}
+
+func (b *Buffer) WriteInt(value uint32) {
+	var slice = b.internal[b.index : b.index+4]
+	binary.LittleEndian.PutUint32(slice, value)
+	b.index += 4
+}
+
 func (b *Buffer) WriteLong(value int64) {
 	var slice = b.internal[b.index : b.index+8]
 	binary.LittleEndian.PutUint64(slice, uint64(value))
@@ -92,16 +103,14 @@ func (b *Buffer) WriteLong(value int64) {
 
 func (b *Buffer) ReadRSString() (string, error) {
 
-	var endIndex = -1;
-	var slice = b.internal[b.index:];
-
-	log.Print(slice)
+	var endIndex = -1
+	var slice = b.internal[b.index:]
 
 	// find the index in the slice of the last character
 	for index, val := range slice {
 		if val == 10 {
-			endIndex = index;
-			break;
+			endIndex = index
+			break
 		}
 	}
 
@@ -114,9 +123,4 @@ func (b *Buffer) ReadRSString() (string, error) {
 	b.index = b.index + endIndex + 1
 
 	return string(slice[:endIndex]), nil
-}
-
-func (b *Buffer) WriteByte(value byte) {
-	b.internal[b.index] = value
-	b.index++
 }
