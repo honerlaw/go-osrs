@@ -1,12 +1,7 @@
 package io
 
 /**
-
-This was ripped from rune-source (and in turn hyperion?) Seems I potentially broke the translation since it doesn't
-work...
-
-@todo fix this
-
+This was ripped from rune-source (and in turn hyperion?) and converted to go
  */
 
 const (
