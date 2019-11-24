@@ -5725,6 +5725,7 @@ public class client extends RSApplet {
 					aStream_847.writeDWord(expectedCRCs[l1]);
 
 				aStream_847.writeBytes(stream.buffer, stream.currentOffset, 0);
+
 				stream.encryption = new ISAACRandomGen(ai);
 				for(int j2 = 0; j2 < 4; j2++)
 					ai[j2] += 50;

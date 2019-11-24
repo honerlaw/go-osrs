@@ -41,7 +41,10 @@ public final class Stream extends NodeSub {
 
 	public void createFrame(int i)
 	{
-		buffer[currentOffset++] = (byte)(i + encryption.getNextKey());
+		int key = encryption.getNextKey();
+
+		System.out.println(i + " " + key + " " + (byte)(i + key));
+		buffer[currentOffset++] = (byte)(i + key);
 	}
 
 	public void writeWordBigEndian(int i)
