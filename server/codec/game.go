@@ -1,11 +1,13 @@
-package game
+package codec
 
 import (
 	"encoding/binary"
+	"github.com/honerlaw/go-osrs/packet"
 	"log"
 	"github.com/honerlaw/go-osrs/io"
-	"github.com/honerlaw/go-osrs/io/packet"
 )
+
+var opcodeBuffer = make([]byte, 4)
 
 var packetLengths = []int8{
 	0, 0, 0, 1, -1, 0, 0, 0, 0, 0,  // 0
@@ -36,20 +38,20 @@ var packetLengths = []int8{
 	0, 0, 6, 6, 0, 0, 0,            // 250
 }
 
-var packetMap = map[byte]packet.PacketDecoder {
+type GameCodec struct {
 
 }
 
-func Decoder(b *io.Buffer, c *io.Client) ([]packet.Packet, error) {
-	var key = c.IsaacDecryptor.NextValue()
+func NewGameCodec() *GameCodec {
+	return &GameCodec{}
+}
 
-	// this is failing miserably
-	var op = uint32(b.ReadByte()) - key
+func (codec *GameCodec) Decode(b *io.Buffer, c *io.Client) ([]packet.Packet, error) {
+	var op = uint32(b.ReadByte()) - c.IsaacDecryptor.NextValue()
 
-	bs := make([]byte, 4)
-	binary.LittleEndian.PutUint32(bs, op)
-	var opcode = bs[0]
-
+	// convert the int above to a byte array, since the first byte is the opcode
+	binary.LittleEndian.PutUint32(opcodeBuffer, op)
+	var opcode = opcodeBuffer[0]
 	var length = packetLengths[ opcode ]
 
 	// variable in length
@@ -73,12 +75,19 @@ func Decoder(b *io.Buffer, c *io.Client) ([]packet.Packet, error) {
 		return nil, nil
 	}
 
-	var packetDecoder, exists = packetMap[opcode]
+	// fetch the packet decoder
+	/*var packetDecoder, exists = packetMap[opcode]
 	if !exists {
 		log.Print("No packet decoder found for opcode ", opcode)
 
 		return nil, nil
 	}
 
-	return packetDecoder(opcode, length, b), nil
+	return packetDecoder(opcode, length, b), nil*/
+	return nil, nil
 }
+
+func (codec *GameCodec) Encode(b *io.Buffer, _ *io.Client) *io.Buffer {
+	return b
+}
+

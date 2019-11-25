@@ -1,27 +1,21 @@
 package main
 
 import (
+	"github.com/honerlaw/go-osrs/codec"
+	"github.com/honerlaw/go-osrs/io"
+	"github.com/honerlaw/go-osrs/packet"
 	"log"
 	"net"
-	"github.com/honerlaw/go-osrs/io"
-	"github.com/honerlaw/go-osrs/io/packet"
-	"github.com/honerlaw/go-osrs/io/packet/game"
-	"github.com/honerlaw/go-osrs/io/packet/handshake"
-	"github.com/honerlaw/go-osrs/io/packet/login"
 )
 
-var packetDecoderMap = map[byte]packet.PacketStateDecoder{
-	packet.PACKET_STATE_HANDSHAKE: handshake.Decoder,
-	packet.PACKET_STATE_LOGIN:     login.Decoder,
-	packet.PACKET_STATE_GAME:      game.Decoder,
-}
-
-var packetEncoderMap = map[byte]packet.PacketStateEncoder{
-	packet.PACKET_STATE_GAME: game.Encoder,
+var codecMap = map[byte]codec.Codec{
+	codec.CODEC_STATE_GAME:      codec.NewGameCodec(),
+	codec.CODEC_STATE_LOGIN:     codec.NewLoginCodec(),
+	codec.CODEC_STATE_HANDSHAKE: codec.NewHandshakeCodec(),
 }
 
 func main() {
-	var listener, err = net.Listen("tcp", ":43594")
+	var listener, err = net.Listen("tcp", "0.0.0.0:43594")
 
 	if err != nil {
 		log.Fatal("Failed to start server", err)
@@ -46,6 +40,23 @@ func main() {
 	}
 }
 
+/*
+
+The flow of this is basically
+
+1. call a state codec to decode the initial data into a set of packets to handle
+2. handle those packets in some way (maybe we should use eventing to event out that the packet occurred instead?)
+2.1. handling will return new packets to send out
+3. encode the new packets to send out using the individual packet encoders
+4. encode the packet using the game encoder
+5. send the packet back out
+
+Future Flow
+1. state codec decodes the initial data into a set of packets
+2. packet data is evented out to be handled by whatever is listening for the different packets
+3. outgoing packets are written to an "out" buffer as they are handled by listeners (we only write full packets at a time)
+4. we periodically flush the buffer
+*/
 func listen(c *io.Client) {
 	for {
 		var err = c.Buffer.Read(c.Reader)
@@ -58,11 +69,10 @@ func listen(c *io.Client) {
 			continue
 		}
 
-		var decoder = packetDecoderMap[c.State]
-		var encoder = packetEncoderMap[c.State]
+		var codec = codecMap[c.State]
 
-		// decode the buffer into a packet
-		var decodedPackets, decodeErr = decoder(c.Buffer, c)
+		// decode the buffer into a packets
+		var decodedPackets, decodeErr = codec.Decode(c.Buffer, c)
 
 		// something really bad happened if we have an error from the decoder, so just disconnect
 		if decodeErr != nil {
@@ -94,12 +104,7 @@ func listen(c *io.Client) {
 		for _, responsePackets := range allResponsePackets {
 			for _, responsePacket := range responsePackets {
 
-				var encodedBuf= responsePacket.Encode()
-
-				// if additional encoding is needed, use it
-				if encoder != nil {
-					encodedBuf = encoder(encodedBuf, c)
-				}
+				var encodedBuf = codec.Encode(responsePacket.Encode(), c)
 				c.Write(encodedBuf, true)
 			}
 		}

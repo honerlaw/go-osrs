@@ -1,8 +1,7 @@
-package login
+package packet
 
 import (
 	"github.com/honerlaw/go-osrs/io"
-	"github.com/honerlaw/go-osrs/io/packet"
 	"log"
 )
 
@@ -20,7 +19,25 @@ type LoginRequest struct {
 	password               string
 }
 
-func (l *LoginRequest) Handle(c *io.Client) []packet.Packet {
+func NewLoginRequest(requestType byte, magicId byte, version uint16, memoryType byte,
+	crcKeys []uint32, encryptedOpcodeSuccess byte, decryptIsaacSeed []uint32,
+	encryptIsaacSeed []uint32, clientId uint32, username string, password string) *LoginRequest {
+	return &LoginRequest{
+		requestType,
+		magicId,
+		version,
+		memoryType,
+		crcKeys,
+		encryptedOpcodeSuccess,
+		decryptIsaacSeed,
+		encryptIsaacSeed,
+		clientId,
+		username,
+		password,
+	}
+}
+
+func (l *LoginRequest) Handle(c *io.Client) []Packet {
 	if l.requestType != 16 && l.requestType != 18 {
 		log.Print("Invalid login opcode ", l.requestType)
 
@@ -42,14 +59,13 @@ func (l *LoginRequest) Handle(c *io.Client) []packet.Packet {
 		return nil
 	}
 
-	log.Println(l.decryptIsaacSeed,l.encryptIsaacSeed);
-
-	c.SetIsaacSeeds(l.decryptIsaacSeed, l.encryptIsaacSeed)
+	c.SetDecryptor(io.NewIsaac(l.decryptIsaacSeed))
+	c.SetEncryptor(io.NewIsaac(l.encryptIsaacSeed))
 	c.Player.SetLoginInformation(l.memoryType, l.clientId, l.username, l.password)
 
-	c.State = packet.PACKET_STATE_GAME
+	c.MoveToNextCodecState()
 
-	return []packet.Packet{NewLoginResponse(2, 0)}
+	return []Packet{NewLoginResponse(2, 0)}
 }
 
 func (h *LoginRequest) Encode() *io.Buffer {

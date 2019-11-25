@@ -26,6 +26,7 @@ func NewClient(connection net.Conn) *Client {
 		Reader:     bufio.NewReader(connection),
 		writer:     bufio.NewWriter(connection),
 		Buffer:     NewBuffer(256),
+		State:      0,
 	}
 }
 
@@ -49,7 +50,17 @@ func (c *Client) Close() {
 	}
 }
 
-func (c *Client) SetIsaacSeeds(decryptIsaacSeed []uint32, encryptIsaacSeed []uint32) {
-	c.IsaacDecryptor = NewIsaac(decryptIsaacSeed)
-	c.IsaacEncryptor = NewIsaac(encryptIsaacSeed)
+func (c *Client) MoveToNextCodecState() {
+	if c.State == 2 {
+		return
+	}
+	c.State += 1
+}
+
+func (c *Client) SetEncryptor(encryptor *Isaac) {
+	c.IsaacEncryptor = encryptor
+}
+
+func (c *Client) SetDecryptor(decryptor *Isaac) {
+	c.IsaacDecryptor = decryptor
 }

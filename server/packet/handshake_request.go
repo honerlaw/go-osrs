@@ -1,10 +1,9 @@
-package handshake
+package packet
 
 import (
 	"github.com/honerlaw/go-osrs/io"
-	"github.com/honerlaw/go-osrs/io/packet"
-	"math/rand"
 	"github.com/honerlaw/go-osrs/model"
+	"math/rand"
 )
 
 type HandshakeRequest struct {
@@ -19,12 +18,12 @@ func NewHandshakeRequest(opcode byte, namehash byte) *HandshakeRequest {
 	}
 }
 
-func (h *HandshakeRequest) Handle(client *io.Client) []packet.Packet {
+func (h *HandshakeRequest) Handle(client *io.Client) []Packet {
 	client.Player = model.NewPlayer(h.namehash)
 	switch h.opcode {
 	case 14:
-		client.State = packet.PACKET_STATE_LOGIN
-		return []packet.Packet{NewHandshakeResponse(0, rand.Int63())}
+		client.MoveToNextCodecState()
+		return []Packet{NewHandshakeResponse(0, rand.Int63())}
 	}
 	return nil
 }

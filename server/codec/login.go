@@ -1,13 +1,21 @@
-package login
+package codec
 
 import (
-	"github.com/honerlaw/go-osrs/io"
-	"github.com/honerlaw/go-osrs/io/packet"
 	"errors"
+	"github.com/honerlaw/go-osrs/io"
+	"github.com/honerlaw/go-osrs/packet"
 	"log"
 )
 
-func Decoder(b *io.Buffer, _ *io.Client) ([]packet.Packet, error) {
+type LoginCodec struct {
+
+}
+
+func NewLoginCodec() *LoginCodec {
+	return &LoginCodec{}
+}
+
+func (codec *LoginCodec) Decode(b *io.Buffer, _ *io.Client) ([]packet.Packet, error) {
 	if b.Length() < 2 {
 		log.Print("LOGIN: 2 bytes should have been read! ", b.Length())
 
@@ -63,7 +71,7 @@ func Decoder(b *io.Buffer, _ *io.Client) ([]packet.Packet, error) {
 	var username, _ = b.ReadRSString()
 	var password, _ = b.ReadRSString()
 
-	return []packet.Packet{&LoginRequest{
+	return []packet.Packet{packet.NewLoginRequest(
 		requestType,
 		magicId,
 		version,
@@ -75,5 +83,9 @@ func Decoder(b *io.Buffer, _ *io.Client) ([]packet.Packet, error) {
 		clientId,
 		username,
 		password,
-	}}, nil
+	)}, nil
+}
+
+func (codec *LoginCodec) Encode(b *io.Buffer, _ *io.Client) *io.Buffer {
+	return b
 }
