@@ -1,22 +1,24 @@
 package model
 
 type Player struct {
-	namehash   byte
-	memoryType byte
-	clientId   uint32
-	username   string
-	password   string
+	Namehash   byte
+	MemoryType byte
+	ClientId   uint32
+	Username   string
+	Password   string
+	Position   *Position
 }
 
 func NewPlayer(namehash byte) *Player {
 	return &Player{
-		namehash: namehash,
+		Namehash: namehash,
+		Position: NewPosition(0, 0, 0),
 	}
 }
 
 func (p *Player) SetLoginInformation(memoryType byte, clientId uint32, username string, password string) {
-	p.memoryType = memoryType
-	p.clientId = clientId
-	p.username = username
-	p.password = password
+	p.MemoryType = memoryType
+	p.ClientId = clientId
+	p.Username = username
+	p.Password = password
 }

@@ -25,7 +25,7 @@ func (codec *LoginCodec) Decode(b *io.Buffer, _ *model.Client) ([]model.Packet, 
 	}
 
 	var requestType = b.ReadByte()
-	var expectedBlockLength = int(b.ReadByte())
+	var expectedBlockLength = uint32(b.ReadByte())
 
 	// check if enough data is in the buffer, if not enough wait for more
 	if expectedBlockLength < b.Remaining() {
@@ -51,7 +51,7 @@ func (codec *LoginCodec) Decode(b *io.Buffer, _ *model.Client) ([]model.Packet, 
 		crcKeys[i] = b.ReadInt()
 	}
 
-	var encryptedBlockLength = int(b.ReadByte())
+	var encryptedBlockLength = uint32(b.ReadByte())
 	if encryptedBlockLength != b.Remaining() {
 		log.Print("LOGIN: encrypted block length does not match remaining buffer", encryptedBlockLength, b.Remaining())
 		return nil, errors.New("Invalid buffer length")

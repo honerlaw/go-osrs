@@ -1,13 +1,10 @@
 package codec
 
 import (
-	"encoding/binary"
 	"github.com/honerlaw/go-osrs/io"
 	"github.com/honerlaw/go-osrs/model"
 	"log"
 )
-
-var opcodeBuffer = make([]byte, 4)
 
 var packetLengths = []int8{
 	0, 0, 0, 1, -1, 0, 0, 0, 0, 0,  // 0
@@ -47,11 +44,7 @@ func NewGameCodec() *GameCodec {
 }
 
 func (codec *GameCodec) Decode(b *io.Buffer, c *model.Client) ([]model.Packet, error) {
-	var op = uint32(b.ReadByte()) - c.IsaacDecryptor.NextValue()
-
-	// convert the int above to a byte array, since the first byte is the opcode
-	binary.LittleEndian.PutUint32(opcodeBuffer, op)
-	var opcode = opcodeBuffer[0]
+	var opcode = byte(uint32(b.ReadByte()) - c.IsaacDecryptor.NextValue())
 	var length = packetLengths[ opcode ]
 
 	// variable in length
@@ -61,7 +54,7 @@ func (codec *GameCodec) Decode(b *io.Buffer, c *model.Client) ([]model.Packet, e
 		if b.Remaining() > 0 {
 			length = int8(b.ReadByte())
 
-			if int(length) < b.Remaining() {
+			if uint32(length) < b.Remaining() {
 				log.Print("Not enough data to read entire packet ", length, b.Remaining())
 
 				b.Compact()
