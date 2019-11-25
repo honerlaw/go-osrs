@@ -2,6 +2,7 @@ package packet
 
 import (
 	"github.com/honerlaw/go-osrs/io"
+	"github.com/honerlaw/go-osrs/model"
 	"log"
 )
 
@@ -37,7 +38,7 @@ func NewLoginRequest(requestType byte, magicId byte, version uint16, memoryType 
 	}
 }
 
-func (l *LoginRequest) Handle(c *io.Client) []Packet {
+func (l *LoginRequest) Handle(c *model.Client) []model.Packet {
 	if l.requestType != 16 && l.requestType != 18 {
 		log.Print("Invalid login opcode ", l.requestType)
 
@@ -65,7 +66,7 @@ func (l *LoginRequest) Handle(c *io.Client) []Packet {
 
 	c.MoveToNextCodecState()
 
-	return []Packet{NewLoginResponse(2, 0)}
+	return []model.Packet{NewLoginResponse(2, 0)}
 }
 
 func (h *LoginRequest) Encode() *io.Buffer {

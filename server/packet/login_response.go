@@ -2,6 +2,7 @@ package packet
 
 import (
 	"github.com/honerlaw/go-osrs/io"
+	"github.com/honerlaw/go-osrs/model"
 )
 
 type LoginResponse struct {
@@ -16,7 +17,7 @@ func NewLoginResponse(status byte, privilege byte) *LoginResponse {
 	}
 }
 
-func (h *LoginResponse) Handle(client *io.Client) []Packet {
+func (h *LoginResponse) Handle(client *model.Client) []model.Packet {
 	return nil
 }
 

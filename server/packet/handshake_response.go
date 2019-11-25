@@ -2,6 +2,7 @@ package packet
 
 import (
 	"github.com/honerlaw/go-osrs/io"
+	"github.com/honerlaw/go-osrs/model"
 )
 
 type HandshakeResponse struct {
@@ -18,7 +19,7 @@ func NewHandshakeResponse(status byte, serverIsaacKey int64) *HandshakeResponse 
 	}
 }
 
-func (h *HandshakeResponse) Handle(client *io.Client) []Packet {
+func (h *HandshakeResponse) Handle(client *model.Client) []model.Packet {
 	return nil
 }
 

@@ -18,12 +18,12 @@ func NewHandshakeRequest(opcode byte, namehash byte) *HandshakeRequest {
 	}
 }
 
-func (h *HandshakeRequest) Handle(client *io.Client) []Packet {
+func (h *HandshakeRequest) Handle(client *model.Client) []model.Packet {
 	client.Player = model.NewPlayer(h.namehash)
 	switch h.opcode {
 	case 14:
 		client.MoveToNextCodecState()
-		return []Packet{NewHandshakeResponse(0, rand.Int63())}
+		return []model.Packet{NewHandshakeResponse(0, rand.Int63())}
 	}
 	return nil
 }

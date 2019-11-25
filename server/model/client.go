@@ -1,10 +1,10 @@
-package io
+package model
 
 import (
 	"bufio"
+	"github.com/honerlaw/go-osrs/io"
 	"log"
 	"net"
-	"github.com/honerlaw/go-osrs/model"
 )
 
 type Client struct {
@@ -12,10 +12,10 @@ type Client struct {
 	Reader           *bufio.Reader
 	writer           *bufio.Writer
 	State            byte
-	Buffer           *Buffer
-	Player           *model.Player
-	IsaacDecryptor   *Isaac
-	IsaacEncryptor   *Isaac
+	Buffer           *io.Buffer
+	Player           *Player
+	IsaacDecryptor   *io.Isaac
+	IsaacEncryptor   *io.Isaac
 	DecryptIsaacSeed []uint32
 	EncryptIsaacSeed []uint32
 }
@@ -25,12 +25,12 @@ func NewClient(connection net.Conn) *Client {
 		connection: connection,
 		Reader:     bufio.NewReader(connection),
 		writer:     bufio.NewWriter(connection),
-		Buffer:     NewBuffer(256),
+		Buffer:     io.NewBuffer(256),
 		State:      0,
 	}
 }
 
-func (c *Client) Write(buf *Buffer, flush bool) {
+func (c *Client) Write(buf *io.Buffer, flush bool) {
 	var _, err = c.writer.Write(buf.AsByteArray())
 	if err != nil {
 		log.Print("Failed to write buffer to stream", err)
@@ -57,10 +57,10 @@ func (c *Client) MoveToNextCodecState() {
 	c.State += 1
 }
 
-func (c *Client) SetEncryptor(encryptor *Isaac) {
+func (c *Client) SetEncryptor(encryptor *io.Isaac) {
 	c.IsaacEncryptor = encryptor
 }
 
-func (c *Client) SetDecryptor(decryptor *Isaac) {
+func (c *Client) SetDecryptor(decryptor *io.Isaac) {
 	c.IsaacDecryptor = decryptor
 }

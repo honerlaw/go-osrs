@@ -1,8 +1,7 @@
-package codec
+package model
 
 import (
 	"github.com/honerlaw/go-osrs/io"
-	"github.com/honerlaw/go-osrs/packet"
 )
 
 const (
@@ -12,6 +11,6 @@ const (
 )
 
 type Codec interface {
-	Decode(*io.Buffer, *io.Client) ([]packet.Packet, error)
-	Encode(*io.Buffer, *io.Client) *io.Buffer
+	Decode(*io.Buffer, *Client) ([]Packet, error)
+	Encode(*io.Buffer, *Client) *io.Buffer
 }

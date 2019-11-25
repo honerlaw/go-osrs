@@ -2,9 +2,9 @@ package codec
 
 import (
 	"encoding/binary"
-	"github.com/honerlaw/go-osrs/packet"
-	"log"
 	"github.com/honerlaw/go-osrs/io"
+	"github.com/honerlaw/go-osrs/model"
+	"log"
 )
 
 var opcodeBuffer = make([]byte, 4)
@@ -46,7 +46,7 @@ func NewGameCodec() *GameCodec {
 	return &GameCodec{}
 }
 
-func (codec *GameCodec) Decode(b *io.Buffer, c *io.Client) ([]packet.Packet, error) {
+func (codec *GameCodec) Decode(b *io.Buffer, c *model.Client) ([]model.Packet, error) {
 	var op = uint32(b.ReadByte()) - c.IsaacDecryptor.NextValue()
 
 	// convert the int above to a byte array, since the first byte is the opcode
@@ -87,7 +87,7 @@ func (codec *GameCodec) Decode(b *io.Buffer, c *io.Client) ([]packet.Packet, err
 	return nil, nil
 }
 
-func (codec *GameCodec) Encode(b *io.Buffer, _ *io.Client) *io.Buffer {
+func (codec *GameCodec) Encode(b *io.Buffer, _ *model.Client) *io.Buffer {
 	return b
 }
 
