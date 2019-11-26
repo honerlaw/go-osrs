@@ -12,7 +12,7 @@ type Player struct {
 func NewPlayer(namehash byte) *Player {
 	return &Player{
 		Namehash: namehash,
-		Position: NewPosition(0, 0, 0),
+		Position: NewPosition(3200, 3200, 0),
 	}
 }
 

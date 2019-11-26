@@ -13,24 +13,25 @@ var BIT_MASK = []int32{
 	0x1fffffff, 0x3fffffff, 0x7fffffff, -1,
 };
 
-
 type Buffer struct {
-	internal    []byte // the internal byte array this buffer is operating on
-	length      uint32    // how many bytes of are actually in the buffer (vs capacity)
-	index       uint32    // the location of the reader index
-	isCompacted bool
-	isBitMode   bool // whether we are trying to read / write bits
-	bitIndex    uint32  // the current bitIndex to write to
+	internal            []byte // the internal byte array this buffer is operating on
+	length              uint32 // how many bytes of are actually in the buffer (vs capacity)
+	index               uint32 // the location of the reader index
+	isCompacted         bool
+	isBitMode           bool   // whether we are trying to read / write bits
+	bitIndex            uint32 // the current bitIndex to write to
+	variableOpcodeIndex uint32 // the index in the buffer where we write the variable packet length
 }
 
 func NewBuffer(size int) *Buffer {
 	return &Buffer{
-		internal:    make([]byte, size),
-		length:      0,
-		index:       0,
-		isCompacted: false,
-		isBitMode:   false,
-		bitIndex:    0,
+		internal:            make([]byte, size),
+		length:              0,
+		index:               0,
+		isCompacted:         false,
+		isBitMode:           false,
+		bitIndex:            0,
+		variableOpcodeIndex: 0,
 	}
 }
 
@@ -55,7 +56,7 @@ func (b *Buffer) Remaining() uint32 {
 }
 
 func (b *Buffer) EnableBitMode() {
-	b.bitIndex = b.index  * 8;
+	b.bitIndex = b.index * 8;
 	b.isBitMode = true;
 }
 
@@ -72,7 +73,7 @@ func (b *Buffer) Read(reader io.Reader) (error) {
 		// we want to read into the buffer from where it last was,
 		var slice = b.internal[b.index:]
 		var length, err = reader.Read(slice)
-		b.index = 0        // start the index over, so reading starts from beginning again
+		b.index = 0                // start the index over, so reading starts from beginning again
 		b.length += uint32(length) // increment the number of bytes read
 		return err
 	}
@@ -121,7 +122,7 @@ func (b *Buffer) WriteBits(count byte, value int32) {
 		var tmp = int32(b.internal[bytePos])
 		tmp &= ^BIT_MASK[bitOffset]
 		tmp |= value >> (count - bitOffset) & BIT_MASK[bitOffset]
-		b.internal[bytePos + 1] = byte(tmp)
+		b.internal[bytePos+1] = byte(tmp)
 		count -= bitOffset
 	}
 	if count == bitOffset {
@@ -142,16 +143,62 @@ func (b *Buffer) WriteByte(value byte) {
 	b.index += 1
 }
 
-func (b *Buffer) WriteInt(value uint32) {
-	var slice = b.internal[b.index : b.index+4]
-	binary.LittleEndian.PutUint32(slice, value)
-	b.index += 4
+func (b *Buffer) WriteByteA(value byte) {
+	b.internal[b.index] = value + 128
+	b.index += 1
+}
+
+func (b *Buffer) WriteByteC(value byte) {
+	b.internal[b.index] = -value
+	b.index += 1
+}
+
+func (b *Buffer) WriteByteS(value byte) {
+	b.internal[b.index] = 128 - value
+	b.index += 1
+}
+
+func (b *Buffer) WriteLEShort(value int16) {
+	var slice = b.internal[b.index : b.index+2]
+	binary.LittleEndian.PutUint16(slice, uint16(value))
+	b.index += 2
+}
+
+func (b *Buffer) WriteBEShort(value int16) {
+	var slice = b.internal[b.index : b.index+2]
+	binary.BigEndian.PutUint16(slice, uint16(value))
+	b.index += 2
+}
+
+func (b *Buffer) WriteBEShortA(value int16) {
+	b.WriteByte(byte(value >> 8))
+	b.WriteByteA(byte(value))
+}
+
+func (b *Buffer) WriteLEShortA(value int16) {
+	b.WriteByteA(byte(value))
+	b.WriteByte(byte(value >> 8))
 }
 
 func (b *Buffer) WriteLong(value int64) {
 	var slice = b.internal[b.index : b.index+8]
 	binary.LittleEndian.PutUint64(slice, uint64(value))
 	b.index += 8
+}
+
+func (b *Buffer) WriteOpcode(opcode uint32, offset uint32) {
+	b.WriteByte(byte(opcode + offset))
+}
+
+func (b *Buffer) WriteVariableShortOpcode(opcode uint32, offset uint32) {
+	b.WriteOpcode(opcode, offset)
+	b.variableOpcodeIndex = b.index
+	b.WriteLEShort(0)
+}
+
+func (b *Buffer) WriteVariableShortLength() {
+	var slice = b.internal[b.variableOpcodeIndex : b.variableOpcodeIndex+2]
+	binary.LittleEndian.PutUint16(slice, uint16(b.index))
 }
 
 func (b *Buffer) ReadRSString() (string, error) {

@@ -1,24 +1,21 @@
 package game
 
 import (
-	"github.com/honerlaw/go-osrs/model"
 	"log"
 	"time"
 )
 
-type PlayerUpdate struct {
-	ticker    *time.Ticker
-	gameState *model.GameState
+type TickHandler struct {
+	ticker *time.Ticker
 }
 
-func NewPlayerUpdate(gameState *model.GameState) *PlayerUpdate {
-	return &PlayerUpdate{
-		ticker:    time.NewTicker(600 * time.Millisecond),
-		gameState: gameState,
+func NewTickHandler() *TickHandler {
+	return &TickHandler{
+		ticker: time.NewTicker(600 * time.Millisecond),
 	}
 }
 
-func (update *PlayerUpdate) Cycle() {
+func (update *TickHandler) Cycle() {
 	for ; true; <-update.ticker.C {
 		// https://github.com/honerlaw/osrs/blob/master/server/src/main/java/org/server/osrs/PlayerUpdating.java
 		// split the above into packets for each "update section", the packets then can just return the raw buffer and merge

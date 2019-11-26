@@ -1,8 +1,8 @@
-package codec
+package incoming
 
 import (
 	"github.com/honerlaw/go-osrs/io"
-	"github.com/honerlaw/go-osrs/model"
+	"github.com/honerlaw/go-osrs/io/packet"
 	"log"
 )
 
@@ -35,15 +35,19 @@ var packetLengths = []int8{
 	0, 0, 6, 6, 0, 0, 0,            // 250
 }
 
-type GameCodec struct {
+var packetDecoderMap = map[byte]packet.IncomingPacket{
+	0: NewHandshake(),
+}
+
+type Game struct {
 
 }
 
-func NewGameCodec() *GameCodec {
-	return &GameCodec{}
+func NewGame() *Game {
+	return &Game{}
 }
 
-func (codec *GameCodec) Decode(b *io.Buffer, c *model.Client) ([]model.Packet, error) {
+func (game *Game) Decode(b *io.Buffer, c *io.Client, _ byte, _ int8) ([]packet.PacketData, error) {
 	var opcode = byte(uint32(b.ReadByte()) - c.IsaacDecryptor.NextValue())
 	var length = packetLengths[ opcode ]
 
@@ -68,19 +72,10 @@ func (codec *GameCodec) Decode(b *io.Buffer, c *model.Client) ([]model.Packet, e
 		return nil, nil
 	}
 
-	// fetch the packet decoder
-	/*var packetDecoder, exists = packetMap[opcode]
+	var decoder, exists = packetDecoderMap[opcode]
 	if !exists {
-		log.Print("No packet decoder found for opcode ", opcode)
-
 		return nil, nil
 	}
 
-	return packetDecoder(opcode, length, b), nil*/
-	return nil, nil
+	return decoder.Decode(b, c, opcode, length)
 }
-
-func (codec *GameCodec) Encode(b *io.Buffer, _ *model.Client) *io.Buffer {
-	return b
-}
-

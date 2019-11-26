@@ -13,3 +13,11 @@ func NewPosition(x int, y int, z byte) *Position {
 		Z: z,
 	}
 }
+
+func (p *Position) RegionX() int {
+	return (p.X >> 3) - 6;
+}
+
+func (p *Position) RegionY() int {
+	return (p.Y >> 3) - 6;
+}

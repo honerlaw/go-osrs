@@ -1,18 +1,12 @@
 package main
 
 import (
-	"github.com/honerlaw/go-osrs/codec"
 	"github.com/honerlaw/go-osrs/game"
-	"github.com/honerlaw/go-osrs/model"
+	"github.com/honerlaw/go-osrs/io"
+	"github.com/honerlaw/go-osrs/io/packet/incoming"
 	"log"
 	"net"
 )
-
-var codecMap = map[byte]model.Codec{
-	model.CODEC_STATE_GAME:      codec.NewGameCodec(),
-	model.CODEC_STATE_LOGIN:     codec.NewLoginCodec(),
-	model.CODEC_STATE_HANDSHAKE: codec.NewHandshakeCodec(),
-}
 
 func main() {
 	var listener, err = net.Listen("tcp", "0.0.0.0:43594")
@@ -22,11 +16,10 @@ func main() {
 		return
 	}
 
-	var gameState = model.NewGameState()
-	var playerUpdate = game.NewPlayerUpdate(gameState)
+	var tickHandler = game.NewTickHandler()
 
 	// start the player update cycle
-	go playerUpdate.Cycle()
+	go tickHandler.Cycle()
 
 	log.Print("Listening for new connections")
 	for {
@@ -39,10 +32,8 @@ func main() {
 
 		log.Print("Accepted new connection", conn.LocalAddr())
 
-		var client = model.NewClient(conn)
-		var handler = game.NewRequestHandler(client, codecMap)
-
-		gameState.AddClient(client)
+		var client = io.NewClient(conn)
+		var handler = incoming.NewPacketHandler(client)
 
 		go handler.Listen()
 	}
