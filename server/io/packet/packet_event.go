@@ -1,5 +1,5 @@
 package packet
 
-type PacketData interface {
+type PacketEvent interface {
 	EventCode() int32
 }

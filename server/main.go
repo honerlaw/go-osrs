@@ -3,7 +3,9 @@ package main
 import (
 	"github.com/honerlaw/go-osrs/game"
 	"github.com/honerlaw/go-osrs/io"
+	"github.com/honerlaw/go-osrs/io/packet"
 	"github.com/honerlaw/go-osrs/io/packet/incoming"
+	"github.com/honerlaw/go-osrs/plugin"
 	"log"
 	"net"
 )
@@ -16,7 +18,10 @@ func main() {
 		return
 	}
 
+	var pluginLoader = plugin.NewPluginLoader()
 	var tickHandler = game.NewTickHandler()
+
+	pluginLoader.Load()
 
 	// start the player update cycle
 	go tickHandler.Cycle()
@@ -33,7 +38,9 @@ func main() {
 		log.Print("Accepted new connection", conn.LocalAddr())
 
 		var client = io.NewClient(conn)
-		var handler = incoming.NewPacketHandler(client)
+		var packetEventObserver = packet.NewPacketEventObserver()
+		var handler = incoming.NewPacketHandler(client, packetEventObserver)
+		pluginLoader.Register(client, packetEventObserver)
 
 		go handler.Listen()
 	}

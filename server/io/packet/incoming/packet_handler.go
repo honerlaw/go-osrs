@@ -7,12 +7,14 @@ import (
 )
 
 type PacketHandler struct {
-	client      *io.Client
+	client   *io.Client
+	observer *packet.PacketEventObserver
 }
 
-func NewPacketHandler(client *io.Client) *PacketHandler {
+func NewPacketHandler(client *io.Client, observer *packet.PacketEventObserver) *PacketHandler {
 	return &PacketHandler{
-		client:      client,
+		client: client,
+		observer: observer,
 	}
 }
 
@@ -39,11 +41,14 @@ func (handler *PacketHandler) Listen() {
 			continue
 		}
 
-		// @todo event out the incoming data to listeners
+		// fire off the data to any listeners so the listeners can decide what to do with it
+		for _, datum := range data {
+			handler.observer.Publish(datum)
+		}
 	}
 }
 
-func (handler *PacketHandler) decode() ([]packet.PacketData, error) {
+func (handler *PacketHandler) decode() ([]packet.PacketEvent, error) {
 	switch handler.client.State {
 	case 0:
 		return NewHandshake().Decode(handler.client.Buffer, handler.client, 0, -1)

@@ -1,6 +1,8 @@
-package data
+package event
 
-type LoginData struct {
+const LoginEventCode = -1;
+
+type LoginEvent struct {
 	requestType            byte
 	magicId                byte
 	version                uint16
@@ -14,7 +16,7 @@ type LoginData struct {
 	password               string
 }
 
-func NewLoginData(
+func NewLoginEvent(
 	requestType byte,
 	magicId byte,
 	version uint16,
@@ -26,8 +28,8 @@ func NewLoginData(
 	clientId uint32,
 	username string,
 	password string,
-) *LoginData {
-	return &LoginData{
+) *LoginEvent {
+	return &LoginEvent{
 		requestType,
 		magicId,
 		version,
@@ -42,6 +44,6 @@ func NewLoginData(
 	}
 }
 
-func (data *LoginData) EventCode() int32 {
-	return -1;
+func (data *LoginEvent) EventCode() int32 {
+	return LoginEventCode
 }

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/honerlaw/go-osrs/io"
 	"github.com/honerlaw/go-osrs/io/packet"
-	data2 "github.com/honerlaw/go-osrs/io/packet/data"
+	data2 "github.com/honerlaw/go-osrs/io/packet/event"
 	"log"
 )
 
@@ -16,7 +16,7 @@ func NewLogin() *Login {
 	}
 }
 
-func (req *Login) Decode(buffer *io.Buffer, client *io.Client, _ byte, _ int8) ([]packet.PacketData, error) {
+func (req *Login) Decode(buffer *io.Buffer, client *io.Client, _ byte, _ int8) ([]packet.PacketEvent, error) {
 	if buffer.Length() < 2 {
 		log.Print("LOGIN: 2 bytes should have been read! ", buffer.Length())
 
@@ -93,8 +93,8 @@ func (req *Login) Decode(buffer *io.Buffer, client *io.Client, _ byte, _ int8) (
 	var username, _ = buffer.ReadRSString()
 	var password, _ = buffer.ReadRSString()
 
-	return []packet.PacketData{
-		data2.NewLoginData(
+	return []packet.PacketEvent{
+		data2.NewLoginEvent(
 			requestType,
 			magicId,
 			version,

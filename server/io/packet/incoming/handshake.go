@@ -3,7 +3,7 @@ package incoming
 import (
 	"github.com/honerlaw/go-osrs/io"
 	"github.com/honerlaw/go-osrs/io/packet"
-	data2 "github.com/honerlaw/go-osrs/io/packet/data"
+	data2 "github.com/honerlaw/go-osrs/io/packet/event"
 	"github.com/honerlaw/go-osrs/model"
 	"log"
 	"math/rand"
@@ -17,7 +17,7 @@ func NewHandshake() *Handshake {
 	return &Handshake{}
 }
 
-func (req *Handshake) Decode(buffer *io.Buffer, client *io.Client, _ byte, _ int8) ([]packet.PacketData, error) {
+func (req *Handshake) Decode(buffer *io.Buffer, client *io.Client, _ byte, _ int8) ([]packet.PacketEvent, error) {
 	if buffer.Length() != 2 {
 		log.Print("HANDSHAKE: 2 bytes should have been read! ", buffer.Length())
 
@@ -33,7 +33,7 @@ func (req *Handshake) Decode(buffer *io.Buffer, client *io.Client, _ byte, _ int
 	case 14:
 		client.MoveToNextCodecState()
 
-		return []packet.PacketData{data2.NewHandshakeData(0, rand.Int63())}, nil
+		return []packet.PacketEvent{data2.NewHandshakeEvent(0, rand.Int63())}, nil
 	}
 	return nil, nil
 }

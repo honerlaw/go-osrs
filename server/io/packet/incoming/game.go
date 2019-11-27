@@ -47,7 +47,7 @@ func NewGame() *Game {
 	return &Game{}
 }
 
-func (game *Game) Decode(b *io.Buffer, c *io.Client, _ byte, _ int8) ([]packet.PacketData, error) {
+func (game *Game) Decode(b *io.Buffer, c *io.Client, _ byte, _ int8) ([]packet.PacketEvent, error) {
 	var opcode = byte(uint32(b.ReadByte()) - c.IsaacDecryptor.NextValue())
 	var length = packetLengths[ opcode ]
 
